@@ -1,10 +1,7 @@
 """OpenAI-compatible streaming chat service."""
 
-import os
-from pathlib import Path
 from typing import Dict, Generator, List, Optional
 
-from dotenv import load_dotenv
 from openai import APIConnectionError, APITimeoutError, AuthenticationError, OpenAI
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
@@ -14,60 +11,18 @@ class ChatServiceError(RuntimeError):
 
 
 _CLIENT: Optional[OpenAI] = None
-_MODEL: Optional[str] = None
+_CLIENT_CFG: Optional[tuple[str, str]] = None
 
 
-def _data_env_path() -> Path:
-    data_dir = os.environ.get("SHANBEI_DATA_DIR")
-    if data_dir:
-        return Path(data_dir) / ".env"
-    return Path.cwd() / "data" / ".env"
+def _build_client(api_key: str, base_url: str) -> OpenAI:
+    global _CLIENT, _CLIENT_CFG
 
-
-def _root_env_path() -> Path:
-    return Path.cwd() / ".env"
-
-
-def _load_env() -> None:
-    """Load environment variables from known .env locations (non-overriding)."""
-    data_env = _data_env_path()
-    if data_env.exists():
-        load_dotenv(data_env, override=False)
-
-    root_env = _root_env_path()
-    if root_env.exists():
-        load_dotenv(root_env, override=False)
-
-
-def _build_client() -> OpenAI:
-    global _CLIENT, _MODEL
-
-    if _CLIENT is not None:
+    cfg = (api_key, base_url)
+    if _CLIENT is not None and _CLIENT_CFG == cfg:
         return _CLIENT
 
-    _load_env()
-
-    api_key = os.environ.get("OPENAI_API_KEY")
-    base_url = os.environ.get("OPENAI_BASE_URL")
-    model = os.environ.get("OPENAI_MODEL")
-
-    missing = []
-    if not api_key:
-        missing.append("OPENAI_API_KEY")
-    if not base_url:
-        missing.append("OPENAI_BASE_URL")
-    if not model:
-        missing.append("OPENAI_MODEL")
-
-    if missing:
-        joined = ", ".join(missing)
-        raise ChatServiceError(
-            f"Missing required environment variable(s): {joined}. "
-            "Set OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL in data/.env or .env."
-        )
-
-    _MODEL = model
     _CLIENT = OpenAI(api_key=api_key, base_url=base_url)
+    _CLIENT_CFG = cfg
     return _CLIENT
 
 
@@ -95,17 +50,26 @@ def _with_word_system_prompt(
 
 
 def chat_stream(
-    messages: List[Dict[str, str]], word: Optional[str] = None
+    messages: List[Dict[str, str]],
+    *,
+    api_key: Optional[str],
+    base_url: Optional[str],
+    model: Optional[str],
+    word: Optional[str] = None,
 ) -> Generator[str, None, None]:
     if not messages:
         raise ChatServiceError("messages cannot be empty")
+    if not api_key or not base_url or not model:
+        raise ChatServiceError(
+            "缺少模型配置：api_key/base_url/model 均需由宿主显式传入。"
+        )
 
-    client = _build_client()
+    client = _build_client(api_key=api_key, base_url=base_url)
     payload_messages = _with_word_system_prompt(messages, word)
 
     try:
         stream = client.chat.completions.create(
-            model=_MODEL,
+            model=model,
             messages=payload_messages,
             stream=True,
         )

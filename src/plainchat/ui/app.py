@@ -18,9 +18,12 @@ from .views.dialog import DialogView
 
 
 class ChatbotApp:
-    def __init__(self, word=None, current_word=None):
+    def __init__(self, word=None, current_word=None, api_key=None, base_url=None, model=None):
         self.current_route = "home"
         self.current_word = current_word if current_word is not None else word
+        self.api_key = api_key
+        self.base_url = base_url
+        self.model = model
         self.current_conversation_id = None
         self._stream_thread = None
         self._stream_lock = threading.Lock()
@@ -147,7 +150,13 @@ class ChatbotApp:
                 last_flush_at = time.monotonic()
 
             try:
-                for token in chat_stream(history_messages, word=self.current_word):
+                for token in chat_stream(
+                    history_messages,
+                    word=self.current_word,
+                    api_key=self.api_key,
+                    base_url=self.base_url,
+                    model=self.model,
+                ):
                     full_chunks.append(token)
                     pending_chunks.append(token)
                     pending_size += len(token)
