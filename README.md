@@ -1,10 +1,12 @@
 # PlainChat
 
-PlainChat is a minimal full-screen terminal chatbot (TUI) inspired by web chat UX:
+PlainChat is a minimal full-screen terminal chatbot (TUI) inspired by web chat UX.
+It is designed as a host-integrated shell, not a standalone app:
 
 - Runs in terminal (alternate screen, clean exit back to your shell)
 - Minimal by design (no tools/skills framework)
 - Searchable conversation history and resume conversations
+- Host app must provide model config and `history.json` path
 
 ## Install
 
@@ -12,24 +14,11 @@ PlainChat is a minimal full-screen terminal chatbot (TUI) inspired by web chat U
 pip install "plainchat @ git+https://github.com/LinkCut-World/PlainChat.git"
 ```
 
-## Configure
+## Host Integration
 
-PlainChat library does not read `.env` by itself. Host apps should provide
-`api_key/base_url/model` explicitly.
-
-For standalone mode (`plainchat`), this project loads `.env` via `load_dotenv()`
-and lets python-dotenv search current/parent directories automatically.
-Create `.env` (for example at your workspace root) with:
-
-```ini
-OPENAI_API_KEY=your_api_key_here
-OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_MODEL=deepseek-chat
-```
-
-## Run
-
-```bash
-plainchat
-```
+The host app should:
+- load `.env` (if needed)
+- read `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_MODEL`
+- decide where `history.json` is stored
+- call `start_chatbot(...)` with explicit arguments
 

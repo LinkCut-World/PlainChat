@@ -16,9 +16,6 @@ dependencies = [
   "requests",
 ]
 
-[project.scripts]
-plainchat = "plainchat.run_standalone:main"
-
 [tool.setuptools]
 package-dir = {"" = "src"}
 

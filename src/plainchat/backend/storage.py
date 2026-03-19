@@ -1,7 +1,6 @@
 """Storage layer for PlainChat conversation history."""
 
 import json
-import os
 import time
 import uuid
 from pathlib import Path
@@ -10,26 +9,23 @@ from typing import List, Optional
 from .models import Conversation, Message, SearchResult
 
 
-_HISTORY_FILE = "history.json"
+_HISTORY_FILE_PATH: Optional[Path] = None
 
 
-def _default_data_dir() -> Path:
-    """
-    Default data directory.
-
-    - If host app sets SHANBEI_DATA_DIR, we follow it (for compatibility with 扇贝).
-    - Otherwise, we default to `<cwd>/data`, so the app is portable as a standalone CLI.
-    """
-    env = os.environ.get("SHANBEI_DATA_DIR")
-    if env:
-        return Path(env)
-    return Path.cwd() / "data"
+def set_history_file_path(path: str | Path) -> None:
+    """Configure where conversation history is stored."""
+    global _HISTORY_FILE_PATH
+    _HISTORY_FILE_PATH = Path(path).expanduser()
 
 
 def _get_history_file_path() -> Path:
-    data_dir = _default_data_dir()
-    data_dir.mkdir(parents=True, exist_ok=True)
-    return data_dir / _HISTORY_FILE
+    if _HISTORY_FILE_PATH is None:
+        raise RuntimeError(
+            "History file path is not configured. Host app must call "
+            "set_history_file_path(...) before using storage."
+        )
+    _HISTORY_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    return _HISTORY_FILE_PATH
 
 
 def _load_raw_data() -> dict:
