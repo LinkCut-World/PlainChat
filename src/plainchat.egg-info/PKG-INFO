@@ -1,0 +1,42 @@
+Metadata-Version: 2.4
+Name: plainchat
+Version: 0.0.0
+Summary: A minimal full-screen terminal chatbot with searchable chat history.
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: prompt_toolkit
+Requires-Dist: rich
+Requires-Dist: openai
+Requires-Dist: python-dotenv
+Requires-Dist: requests
+
+# PlainChat
+
+PlainChat is a minimal full-screen terminal chatbot (TUI) inspired by web chat UX:
+
+- Runs in terminal (alternate screen, clean exit back to your shell)
+- Minimal by design (no tools/skills framework)
+- Searchable conversation history and resume conversations
+
+## Install
+
+```bash
+pip install "plainchat @ git+https://github.com/LinkCut-World/PlainChat.git"
+```
+
+## Configure
+
+Create `.env` in your working directory (or `data/.env`), with an OpenAI-compatible endpoint:
+
+```ini
+OPENAI_API_KEY=your_api_key_here
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=deepseek-chat
+```
+
+## Run
+
+```bash
+plainchat
+```
+

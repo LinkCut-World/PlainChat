@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plainchat"
+version = "0.0.0"
+description = "A minimal full-screen terminal chatbot with searchable chat history."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "prompt_toolkit",
+  "rich",
+  "openai",
+  "python-dotenv",
+  "requests",
+]
+
+[project.scripts]
+plainchat = "plainchat.run_standalone:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

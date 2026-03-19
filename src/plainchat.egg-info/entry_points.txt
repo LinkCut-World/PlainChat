@@ -1,0 +1,2 @@
+[console_scripts]
+plainchat = plainchat.run_standalone:main
