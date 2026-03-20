@@ -42,9 +42,3 @@ start_chatbot(
     extras={"source": "shanbei", "word": "eager"},
 )
 ```
-
-## History Compatibility
-
-PlainChat now stores per-conversation context in `extras`.
-Old history entries using top-level `word` are still readable and are mapped to `extras["word"]` during load.
-

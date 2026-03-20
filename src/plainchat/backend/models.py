@@ -58,8 +58,6 @@ class Conversation:
         extras = data.get("extras")
         if not isinstance(extras, dict):
             extras = {}
-        if "word" in data and data.get("word") is not None:
-            extras.setdefault("word", data.get("word"))
 
         return cls(
             id=data["id"],
