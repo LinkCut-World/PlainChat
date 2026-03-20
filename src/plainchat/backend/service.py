@@ -26,36 +26,12 @@ def _build_client(api_key: str, base_url: str) -> OpenAI:
     return _CLIENT
 
 
-def _with_word_system_prompt(
-    messages: List[Dict[str, str]], word: Optional[str]
-) -> List[Dict[str, str]]:
-    if not word:
-        return list(messages)
-
-    system_prompt = {
-        "role": "system",
-        "content": (
-            "You are a helpful assistant. "
-            f"The user is currently focused on the word '{word}'. "
-            "When helpful, explain usage clearly and provide natural examples."
-        ),
-    }
-
-    if messages and messages[0].get("role") == "system":
-        out = list(messages)
-        out[0] = system_prompt
-        return out
-
-    return [system_prompt, *messages]
-
-
 def chat_stream(
     messages: List[Dict[str, str]],
     *,
     api_key: Optional[str],
     base_url: Optional[str],
     model: Optional[str],
-    word: Optional[str] = None,
 ) -> Generator[str, None, None]:
     if not messages:
         raise ChatServiceError("messages cannot be empty")
@@ -65,7 +41,7 @@ def chat_stream(
         )
 
     client = _build_client(api_key=api_key, base_url=base_url)
-    payload_messages = _with_word_system_prompt(messages, word)
+    payload_messages = list(messages)
 
     try:
         stream = client.chat.completions.create(

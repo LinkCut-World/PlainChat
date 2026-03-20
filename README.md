@@ -22,3 +22,29 @@ The host app should:
 - decide where `history.json` is stored
 - call `start_chatbot(...)` with explicit arguments
 
+### `start_chatbot(...)` arguments
+
+- required: `history_file`, `api_key`, `base_url`, `model`
+- optional: `prefill_query`, `extras`
+
+`prefill_query` is used to prefill the home input box when the TUI starts.
+`extras` is persisted on each new conversation as host-provided context data.
+
+Example:
+
+```python
+start_chatbot(
+    history_file="data/history.json",
+    api_key=api_key,
+    base_url=base_url,
+    model=model,
+    prefill_query="eager",
+    extras={"source": "shanbei", "word": "eager"},
+)
+```
+
+## History Compatibility
+
+PlainChat now stores per-conversation context in `extras`.
+Old history entries using top-level `word` are still readable and are mapped to `extras["word"]` during load.
+

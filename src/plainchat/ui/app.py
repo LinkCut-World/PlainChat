@@ -1,7 +1,7 @@
 import asyncio
 import threading
 import time
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.filters import Condition
@@ -22,14 +22,17 @@ class ChatbotApp:
         self,
         *,
         history_file,
-        word=None,
-        current_word=None,
+        prefill_query: Optional[str] = None,
+        extras: Optional[Dict[str, Any]] = None,
         api_key=None,
         base_url=None,
         model=None,
     ):
         self.current_route = "home"
-        self.current_word = current_word if current_word is not None else word
+        self.prefill_query = prefill_query
+        self.conversation_extras = dict(extras or {})
+        if self.prefill_query:
+            self.conversation_extras.setdefault("prefill_query", self.prefill_query)
         self.api_key = api_key
         self.base_url = base_url
         self.model = model
@@ -38,7 +41,7 @@ class ChatbotApp:
         self._stream_thread = None
         self._stream_lock = threading.Lock()
 
-        initial_text = self.current_word if self.current_word else ""
+        initial_text = self.prefill_query if self.prefill_query else ""
         self.home_view = HomeView(self._on_home_submit, initial_text=initial_text)
         self.dialog_view = DialogView(self._on_dialog_submit)
 
@@ -95,7 +98,7 @@ class ChatbotApp:
         if not query:
             return
 
-        conversation = storage.create_conversation(self.current_word)
+        conversation = storage.create_conversation(self.conversation_extras)
         self.current_conversation_id = conversation.id
         self.dialog_view.load_history([])
         self._set_route("dialog", self.app)
@@ -112,7 +115,7 @@ class ChatbotApp:
             return
 
         if not self.current_conversation_id:
-            conversation = storage.create_conversation(self.current_word)
+            conversation = storage.create_conversation(self.conversation_extras)
             self.current_conversation_id = conversation.id
 
         conv_id = self.current_conversation_id
@@ -162,7 +165,6 @@ class ChatbotApp:
             try:
                 for token in chat_stream(
                     history_messages,
-                    word=self.current_word,
                     api_key=self.api_key,
                     base_url=self.base_url,
                     model=self.model,

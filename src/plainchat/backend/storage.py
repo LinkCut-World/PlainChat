@@ -4,7 +4,7 @@ import json
 import time
 import uuid
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from .models import Conversation, Message, SearchResult
 
@@ -58,13 +58,13 @@ def get_conversation(conv_id: str) -> Optional[Conversation]:
     return None
 
 
-def create_conversation(word: Optional[str] = None) -> Conversation:
+def create_conversation(extras: Optional[Dict[str, Any]] = None) -> Conversation:
     now = time.time()
     conversation = Conversation(
         id=str(uuid.uuid4()),
-        word=word,
         created_at=now,
         updated_at=now,
+        extras=dict(extras or {}),
         messages=[],
     )
 
@@ -144,17 +144,23 @@ def search_conversations(query: str, limit: int = 50) -> List[SearchResult]:
                         match_content += "..."
                     break
 
-            if not match_content and conv.word and query_lower in conv.word.lower():
-                match_content = f"Word: {conv.word}"
+            if not match_content and conv.extras:
+                searchable_extras = json.dumps(conv.extras, ensure_ascii=False).lower()
+                if query_lower in searchable_extras:
+                    prompt_text = conv.extras.get("prefill_query")
+                    if isinstance(prompt_text, str) and prompt_text.strip():
+                        match_content = f"Prefill: {prompt_text}"
+                    else:
+                        match_content = f"Extras: {json.dumps(conv.extras, ensure_ascii=False)}"
 
         if not query_lower or match_content:
             results.append(
                 SearchResult(
                     conversation_id=conv.id,
-                    word=conv.word,
                     title=title,
                     match_content=match_content,
                     updated_at=conv.updated_at,
+                    extras=conv.extras,
                 )
             )
 
