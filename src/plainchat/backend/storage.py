@@ -114,7 +114,7 @@ def delete_conversation(conv_id: str) -> bool:
     return False
 
 
-def search_conversations(query: str, limit: int = 50) -> List[SearchResult]:
+def search_conversations(query: str) -> List[SearchResult]:
     raw_data = _load_raw_data()
     conversations = [Conversation.from_dict(c) for c in raw_data.get("conversations", [])]
 
@@ -165,5 +165,5 @@ def search_conversations(query: str, limit: int = 50) -> List[SearchResult]:
             )
 
     results.sort(key=lambda r: r.updated_at, reverse=True)
-    return results[:limit]
+    return results
 
