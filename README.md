@@ -8,6 +8,8 @@ It is designed as a host-integrated shell, not a standalone app:
 - Searchable conversation history and resume conversations
 - Host app must provide model config and `history.json` path
 
+![](assets/PlainChat.png)
+
 ## Install
 
 ```bash
