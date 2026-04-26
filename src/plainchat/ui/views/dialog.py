@@ -8,6 +8,7 @@ from prompt_toolkit.formatted_text.utils import split_lines
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import HSplit, Window
 from prompt_toolkit.layout.controls import UIContent, UIControl
+from prompt_toolkit.layout.dimension import Dimension
 from prompt_toolkit.mouse_events import MouseEventType
 from prompt_toolkit.widgets import Frame, TextArea
 from rich.console import Console
@@ -159,20 +160,29 @@ class DialogView:
         self.is_streaming = False
         self.history_control = HistoryViewerControl(self._get_history_snapshot)
 
-        def accept_handler_clear(buff):
-            text = buff.text.strip()
-            if text and not self.is_streaming:
-                buff.text = ""
-                self.on_submit_callback(text)
-            return False
-
         input_key_bindings = KeyBindings()
 
-        @input_key_bindings.add("enter", filter=Condition(lambda: self.is_streaming))
-        def _ignore_enter_while_streaming(event):
-            return None
+        @input_key_bindings.add("enter")
+        def _handle_enter(event):
+            if self.is_streaming:
+                return
+            buff = event.current_buffer
+            text = buff.text.strip()
+            if text:
+                buff.text = ""
+                self.on_submit_callback(text)
 
-        self.input_field = TextArea(prompt="> ", multiline=False, accept_handler=accept_handler_clear)
+        @input_key_bindings.add("c-j")
+        @input_key_bindings.add("escape", "enter")
+        def _handle_newline(event):
+            event.current_buffer.insert_text("\n")
+
+        def get_input_height():
+            # 根据当前文本的换行数动态返回确切的行数高度
+            line_count = self.input_field.text.count("\n") + 1
+            return min(2, max(1, line_count))
+
+        self.input_field = TextArea(prompt="> ", multiline=True, height=get_input_height)
         self.input_field.control.key_bindings = input_key_bindings
 
         self.history_window = Window(content=self.history_control, wrap_lines=False, always_hide_cursor=True)

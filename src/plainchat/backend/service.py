@@ -37,7 +37,7 @@ def chat_stream(
         raise ChatServiceError("messages cannot be empty")
     if not api_key or not base_url or not model:
         raise ChatServiceError(
-            "缺少模型配置：api_key/base_url/model 均需由宿主显式传入。"
+            "Missing model configuration: api_key/base_url/model must all be explicitly provided by the host."
         )
 
     client = _build_client(api_key=api_key, base_url=base_url)
@@ -50,11 +50,11 @@ def chat_stream(
             stream=True,
         )
     except AuthenticationError as exc:  # pragma: no cover
-        raise ChatServiceError("API 认证失败：请检查 OPENAI_API_KEY 是否有效。") from exc
+        raise ChatServiceError("API authentication failed: please check if OPENAI_API_KEY is valid.") from exc
     except APITimeoutError as exc:  # pragma: no cover
-        raise ChatServiceError("请求超时：请检查网络后重试。") from exc
+        raise ChatServiceError("Request timed out: please check your network and try again.") from exc
     except (APIConnectionError, RequestsConnectionError) as exc:  # pragma: no cover
-        raise ChatServiceError("网络连接失败：请检查网络或代理配置。") from exc
+        raise ChatServiceError("Network connection failed: please check your network or proxy configuration.") from exc
     except Exception as exc:  # pragma: no cover
         raise ChatServiceError(f"Failed to start chat stream: {exc}") from exc
 
@@ -70,11 +70,11 @@ def chat_stream(
             if text:
                 yield text
     except AuthenticationError as exc:  # pragma: no cover
-        raise ChatServiceError("API 认证失败：请检查 OPENAI_API_KEY 是否有效。") from exc
+        raise ChatServiceError("API authentication failed: please check if OPENAI_API_KEY is valid.") from exc
     except APITimeoutError as exc:  # pragma: no cover
-        raise ChatServiceError("请求超时：请检查网络后重试。") from exc
+        raise ChatServiceError("Request timed out: please check your network and try again.") from exc
     except (APIConnectionError, RequestsConnectionError) as exc:  # pragma: no cover
-        raise ChatServiceError("网络连接失败：请检查网络或代理配置。") from exc
+        raise ChatServiceError("Network connection failed: please check your network or proxy configuration.") from exc
     except Exception as exc:  # pragma: no cover
         raise ChatServiceError(f"Streaming interrupted: {exc}") from exc
 

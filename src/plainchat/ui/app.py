@@ -186,7 +186,7 @@ class ChatbotApp:
 
                 storage.add_message(conv_id, "assistant", full_answer)
             except ChatServiceError as err:
-                error_text = f"系统提示：{err}"
+                error_text = f"System message: {err}"
                 placeholder = self.dialog_view.get_message(assistant_index)
                 if placeholder and placeholder.get("content", "").strip():
                     self.dialog_view.add_message("assistant_error", error_text)
@@ -195,7 +195,7 @@ class ChatbotApp:
                 storage.add_message(conv_id, "assistant", error_text)
                 self.app.invalidate()
             except Exception as err:  # pragma: no cover
-                error_text = f"系统提示：发生未知错误，请稍后重试。({err})"
+                error_text = f"System message: An unknown error occurred, please try again later. ({err})"
                 placeholder = self.dialog_view.get_message(assistant_index)
                 if placeholder and placeholder.get("content", "").strip():
                     self.dialog_view.add_message("assistant_error", error_text)

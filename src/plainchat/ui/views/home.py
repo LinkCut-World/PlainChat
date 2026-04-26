@@ -3,6 +3,7 @@ import re
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import HSplit, Window
 from prompt_toolkit.layout.controls import FormattedTextControl
+from prompt_toolkit.layout.dimension import Dimension
 from prompt_toolkit.layout.margins import PromptMargin
 from prompt_toolkit.widgets import Frame, TextArea
 
@@ -29,7 +30,9 @@ class HomeView:
         def _(event):
             self.scroll_down()
 
-        def accept_handler(buff):
+        @self.kb.add("enter")
+        def _handle_enter(event):
+            buff = event.current_buffer
             text = buff.text.strip()
             if self.selected_index != -1 and self.selected_index < len(self.filtered_data):
                 selected_item = self.filtered_data[self.selected_index]
@@ -39,12 +42,19 @@ class HomeView:
                     self.on_submit_callback(text, None)
                     buff.text = ""
 
-            return True
+        @self.kb.add("c-j")
+        @self.kb.add("escape", "enter")
+        def _handle_newline(event):
+            event.current_buffer.insert_text("\n")
+
+        def get_search_height():
+            line_count = self.search_field.text.count("\n") + 1
+            return min(2, max(1, line_count))
 
         self.search_field = TextArea(
             prompt="Ask AI (or search history): ",
-            multiline=False,
-            accept_handler=accept_handler,
+            multiline=True,
+            height=get_search_height,
         )
         self.search_field.control.key_bindings = self.kb
         self.search_field.buffer.on_text_changed += self._on_text_changed
