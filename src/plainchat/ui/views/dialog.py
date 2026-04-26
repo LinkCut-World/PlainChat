@@ -12,9 +12,41 @@ from prompt_toolkit.mouse_events import MouseEventType
 from prompt_toolkit.widgets import Frame, TextArea
 from rich.console import Console
 from rich.console import Group
-from rich.markdown import Markdown
+from rich.markdown import Markdown, TableElement
+from rich.table import Table
+from rich import box
 from rich.panel import Panel
 from rich.text import Text
+
+
+class ChineseWrappingTableElement(TableElement):
+    def __rich_console__(self, console, options):
+        table = Table(
+            box=box.SIMPLE,
+            pad_edge=False,
+            style="markdown.table.border",
+            show_edge=True,
+            show_lines=True,
+            collapse_padding=True,
+        )
+
+        if self.header is not None and self.header.row is not None:
+            for column in self.header.row.cells:
+                heading = column.content.copy()
+                heading.stylize("markdown.table.header")
+                table.add_column(heading, overflow="fold")
+
+        if self.body is not None:
+            for row in self.body.rows:
+                row_content = [element.content for element in row.cells]
+                table.add_row(*row_content)
+
+        yield table
+
+
+class PlainChatMarkdown(Markdown):
+    elements = Markdown.elements.copy()
+    elements["table_open"] = ChineseWrappingTableElement
 
 
 def _render_message_lines(message, width):
@@ -34,7 +66,7 @@ def _render_message_lines(message, width):
     with console.capture() as capture:
         inner_text = f"[bold {color}]{title}:[/bold {color}]"
         if role in ("assistant", "ai"):
-            renderable = Group(Text.from_markup(inner_text), Text(""), Markdown(content))
+            renderable = Group(Text.from_markup(inner_text), Text(""), PlainChatMarkdown(content))
         elif role in ("assistant_error", "error"):
             renderable = Group(
                 Text.from_markup(inner_text),
@@ -96,9 +128,7 @@ class HistoryViewerControl(UIControl):
         visible_lines = lines[self.scroll_offset : self.scroll_offset + self._last_height]
 
         return UIContent(
-            get_line=lambda line_index: visible_lines[line_index]
-            if line_index < len(visible_lines)
-            else [],
+            get_line=lambda line_index: visible_lines[line_index] if line_index < len(visible_lines) else [],
             line_count=max(1, len(visible_lines)),
             cursor_position=Point(x=0, y=0),
             show_cursor=False,
@@ -142,14 +172,10 @@ class DialogView:
         def _ignore_enter_while_streaming(event):
             return None
 
-        self.input_field = TextArea(
-            prompt="> ", multiline=False, accept_handler=accept_handler_clear
-        )
+        self.input_field = TextArea(prompt="> ", multiline=False, accept_handler=accept_handler_clear)
         self.input_field.control.key_bindings = input_key_bindings
 
-        self.history_window = Window(
-            content=self.history_control, wrap_lines=False, always_hide_cursor=True
-        )
+        self.history_window = Window(content=self.history_control, wrap_lines=False, always_hide_cursor=True)
 
         self.container = HSplit(
             [
@@ -210,9 +236,6 @@ class DialogView:
 
     def load_history(self, messages):
         with self._history_lock:
-            self.history = [
-                {"role": msg["role"], "content": msg["content"]} for msg in messages
-            ]
+            self.history = [{"role": msg["role"], "content": msg["content"]} for msg in messages]
         self.history_control.reset_cache()
         self.history_control.scroll_to_bottom()
-
